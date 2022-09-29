@@ -5,6 +5,7 @@ comenzi posibile:
 "c" - creeaza utilizatorul n+1 daca atunci cand a fost folosita comanda erau n utilizatori
 "m" a b S - utilizatorul a ii trimite utilizatorului b mesajul S.
 "p" a b - utilizatorii a si b sunt acum prieteni directi.
+"l" a - afiseaza toate mesajele criptate si decriptate pentru un utilizator apoi goleste stiva
 
 **/
 #include<bits/stdc++.h>
@@ -16,12 +17,12 @@ map<pair<int,int>,bool>p;
 map<pair<int,int>,int>lg;
 struct e{
     int t;
-    vector<string>cd;
+    vector<pair<int,string>>cd;
 }u[100005];
 struct M{
     int t;
     string s;
-    vector<int>d;
+    vector<pair<int,int>>d;
 };
 vector<M>nd[100005];
 vector<pair<int,int>>g[100005];
@@ -59,7 +60,8 @@ void msj(int a,int b,string s){
     }
     M xx;
     xx.t=++T;
-    xx.d.push_back(b);
+    xx.d.push_back({b,0});
+    int fb(b);
     while(b!=a){
         int mn(g[b][0].first),pt(u[g[b][0].second].t);
         for(int i=1;i<g[b].size();i++){
@@ -68,23 +70,43 @@ void msj(int a,int b,string s){
                 pt=u[g[b][0].second].t;
             }
         }
+        xx.d.push_back({mn,u[lg[{mn,b}]].t});
         b=mn;
-        xx.d.push_back(b);
     }
     for(int i=0;i<s.length();i++){
         for(int j=xx.d.size()-2;j>=0;j--){
-            int cnn(lg[{xx.d[j],xx.d[j+1]}]);
-            s[i]=u[cnn].cd[u[cnn].t][(int)s[i]-97];
+            int cnn(lg[{xx.d[j].first,xx.d[j+1].first}]);
+            s[i]=u[cnn].cd[u[cnn].t].second[(int)s[i]-97];
         }
     }
     for(int i=xx.d.size()-2;i>=0;i--){
-        int cnn(lg[{xx.d[i],xx.d[i+1]}]);
+        int cnn(lg[{xx.d[i].first,xx.d[i+1].first}]);
         u[cnn].t++;
         shuffle(al.begin(),al.end(),default_random_engine(xyz));
-        u[cnn].cd.push_back(al);
+        u[cnn].cd.push_back({T+1,al});
     }
     xx.s=s;
-    nd[b].push_back(xx);
+    nd[fb].push_back(xx);
+}
+string dec(int a,int t){
+    int i(0);
+    while(nd[a][i].t!=t)i++;
+    string st(nd[a][i].s);
+    for(int j=1;j<nd[a][i].d.size();j++){
+        int mh(lg[{nd[a][i].d[j].first,nd[a][i].d[j-1].first}]);
+        int v(0);
+        while(u[mh].cd[v].first!=nd[a][i].d[j].second)v++;
+        for(int k=0;k<st.length();k++){
+            bool g(false);
+            for(int w=0;w<u[mh].cd[v].second.length()&&!g;w++){
+                if(u[mh].cd[v].second[w]==st[k]){
+                    g=true;
+                    st[k]=(char)(w+97);
+                }
+            }
+        }
+    }
+    return st;
 }
 int main(){
     while(true){
@@ -95,7 +117,7 @@ int main(){
             int a,b;
             string s;
             cin>>a>>b>>s;
-            if(a>n||a<=0||b>n||b<=n||a==b){
+            if(a>n||a<=0||b>n||b<=0||a==b){
                 cout<<"Utilizatori inexistenti\n";
                 continue;
             }
@@ -117,9 +139,16 @@ int main(){
             u[m].t=1;
             u[m].cd.clear();
             shuffle(al.begin(),al.end(),default_random_engine(xyz));
-            u[m].cd.push_back(al);
+            u[m].cd.push_back({1,al});
+            u[m].cd.push_back({1,al});
             g[a].push_back({b,m});
             g[b].push_back({a,m});
+        }
+        else if(c=='l'){
+            int a;
+            cin>>a;
+            for(int i=0;i<nd[a].size();i++)cout<<dec(a,nd[a][i].t)<<"\n";
+            nd[a].clear();
         }
     }
     return 0;
