@@ -1,0 +1,126 @@
+/**
+
+comenzi posibile:
+
+"c" - creeaza utilizatorul n+1 daca atunci cand a fost folosita comanda erau n utilizatori
+"m" a b S - utilizatorul a ii trimite utilizatorului b mesajul S.
+"p" a b - utilizatorii a si b sunt acum prieteni directi.
+
+**/
+#include<bits/stdc++.h>
+using namespace std;
+unsigned xyz=chrono::system_clock::now().time_since_epoch().count();
+int n,m,T;
+string al="abcdefghijklmnopqrstuvwxyz";
+map<pair<int,int>,bool>p;
+map<pair<int,int>,int>lg;
+struct e{
+    int t;
+    vector<string>cd;
+}u[100005];
+struct M{
+    int t;
+    string s;
+    vector<int>d;
+};
+vector<M>nd[100005];
+vector<pair<int,int>>g[100005];
+bool l(int a,int b){
+    bool vz[n+5];
+    for(int i=1;i<=n;i++)vz[i]=false;
+    vz[a]=true;
+    queue<int>q;
+    q.push(a);
+    while(!q.empty()){
+        for(int i=0;i<g[q.front()].size();i++){
+            if(g[q.front()][i].first==b)return true;
+            if(vz[g[q.front()][i].first])continue;
+            vz[g[q.front()][i].first]=true;
+            q.push(g[q.front()][i].first);
+        }
+        q.pop();
+    }
+    return false;
+}
+void msj(int a,int b,string s){
+    priority_queue<pair<int,int>>q;
+    int dp[n+5];
+    for(int i=1;i<=n;i++)dp[i]=1e9+7;
+    q.push({0,a});
+    dp[a]=0;
+    while(!q.empty()){
+        int el(q.top().second);
+        q.pop();
+        for(int i=0;i<g[el].size();i++){
+            if(dp[g[el][i].first]<=u[g[el][i].second].t+dp[el])continue;
+            dp[g[el][i].first]=u[g[el][i].second].t+dp[el];
+            q.push({-dp[g[el][i].first],g[el][i].first});
+        }
+    }
+    M xx;
+    xx.t=++T;
+    xx.d.push_back(b);
+    while(b!=a){
+        int mn(g[b][0].first),pt(u[g[b][0].second].t);
+        for(int i=1;i<g[b].size();i++){
+            if(dp[mn]+pt>dp[g[b][i].first]+u[g[b][i].second].t){
+                mn=g[b][i].first;
+                pt=u[g[b][0].second].t;
+            }
+        }
+        b=mn;
+        xx.d.push_back(b);
+    }
+    for(int i=0;i<s.length();i++){
+        for(int j=xx.d.size()-2;j>=0;j--){
+            int cnn(lg[{xx.d[j],xx.d[j+1]}]);
+            s[i]=u[cnn].cd[u[cnn].t][(int)s[i]-97];
+        }
+    }
+    for(int i=xx.d.size()-2;i>=0;i--){
+        int cnn(lg[{xx.d[i],xx.d[i+1]}]);
+        u[cnn].t++;
+        shuffle(al.begin(),al.end(),default_random_engine(xyz));
+        u[cnn].cd.push_back(al);
+    }
+    xx.s=s;
+    nd[b].push_back(xx);
+}
+int main(){
+    while(true){
+        char c;
+        cin>>c;
+        if(c=='c')n++;
+        else if(c=='m'){
+            int a,b;
+            string s;
+            cin>>a>>b>>s;
+            if(a>n||a<=0||b>n||b<=n||a==b){
+                cout<<"Utilizatori inexistenti\n";
+                continue;
+            }
+            if(!l(a,b)){
+                cout<<"Nu sunt prieteni(directi sau indirecti)!\n";
+                continue;
+            }
+            msj(a,b,s);
+        }
+        else if(c=='p'){
+            int a,b;
+            cin>>a>>b;
+            if(p[{a,b}]||a==b){
+                cout<<"Sunt deja prieteni directi sau nu pot fi facuti prieteni directi!\n";
+                continue;
+            }
+            p[{a,b}]=p[{b,a}]=true;
+            lg[{a,b}]=lg[{b,a}]=++m;
+            u[m].t=1;
+            u[m].cd.clear();
+            shuffle(al.begin(),al.end(),default_random_engine(xyz));
+            u[m].cd.push_back(al);
+            g[a].push_back({b,m});
+            g[b].push_back({a,m});
+        }
+    }
+    return 0;
+}
